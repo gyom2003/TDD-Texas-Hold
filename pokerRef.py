@@ -4,15 +4,15 @@
 ranks = "23456789TJQKA"
 suits = "cdhs"
 
-rang_vers_valeur = {
+rank_value = {
     "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7,
     "8": 8, "9": 9, "T": 10, "J": 11, "Q": 12, "K": 13, "A": 14
 }
 
-ordre_suit = {"c": 0, "d": 1, "h": 2, "s": 3}
+suit_order = {"c": 0, "d": 1, "h": 2, "s": 3}
 
 
-def normaliser_carte(token):
+def normalize_card(token):
     t = token.strip()
     if len(t) < 2:
         return t
@@ -26,22 +26,22 @@ def normaliser_carte(token):
     return rank + suit
 
 
-def lire_cartes(texte):
+def parse_cards(texte):
     # Convertire
     morceaux = texte.split()
     cartes = []
     for m in morceaux:
-        cartes.append(normaliser_carte(m))
+        cartes.append(normalize_card(m))
     return cartes
 
 
-def construire_etat_partie(board_text, holes_text_par_joueur):
+def build_game_state(board_text, holes_text_par_joueur):
     #parsing
-    board = lire_cartes(board_text)
+    board = parse_cards(board_text)
 
     holes = {}
     for joueur, texte in holes_text_par_joueur.items():
-        holes[joueur] = lire_cartes(texte)
+        holes[joueur] = parse_cards(texte)
 
     return {
         "board": board,
@@ -49,7 +49,7 @@ def construire_etat_partie(board_text, holes_text_par_joueur):
     }
 
 
-def construire_7_cartes_par_joueur(etat):
+def build_7cards_by_player(etat):
     #créer les mains à 7 cartes par joueur
     board = etat["board"]
     holes = etat["holes"]
@@ -61,7 +61,7 @@ def construire_7_cartes_par_joueur(etat):
     return sept_cartes
 
 
-def afficher_resume(etat, sept_cartes):
+def print_summary(etat, sept_cartes):
     #test
     print("=== BOARD ===")
     print(etat["board"])
@@ -76,7 +76,7 @@ def afficher_resume(etat, sept_cartes):
     for joueur, cartes7 in sept_cartes.items():
         print(joueur, ":", cartes7)
         
-def generer_mains_5_parmi_7(cartes7):
+def generate_5_from_7(cartes7):
     #loop pour générer les mains 5 cartes
     resultats = []
     n = len(cartes7)
@@ -90,39 +90,39 @@ def generer_mains_5_parmi_7(cartes7):
 
     return resultats
 
-def iterer_toutes_les_cartes(board, holes):
+def iter_all_cards(board, holes):
     for c in board:
         yield c
     for joueur in holes:
         for c in holes[joueur]:
             yield c
 
-def lister_doublons(board, holes):
+def list_duplicates(board, holes):
     vus = {}
     doublons = []
-    for c in iterer_toutes_les_cartes(board, holes):
+    for c in iter_all_cards(board, holes):
         vus[c] = vus.get(c, 0) + 1
         if vus[c] == 2:
             doublons.append(c)
     return doublons
 
 
-def valeur_carte(carte):
-    c = normaliser_carte(carte)
-    return rang_vers_valeur[c[0]]
+def card_value(carte):
+    c = normalize_card(carte)
+    return rank_value[c[0]]
 
 
-def trier_cartes_desc(cartes):
-    normalisees = [normaliser_carte(c) for c in cartes]
+def sort_cards_desc(cartes):
+    normalisees = [normalize_card(c) for c in cartes]
     return sorted(
         normalisees,
-        key=lambda c: (rang_vers_valeur[c[0]], ordre_suit[c[1]]),
+        key=lambda c: (rank_value[c[0]], suit_order[c[1]]),
         reverse=True
     )
 
 
-def evaluer_main_5(main5):
-    cartes = [normaliser_carte(c) for c in main5]
+def evaluate_hand_5(main5):
+    cartes = [normalize_card(c) for c in main5]
     counts = {}
       
     for c in cartes:
@@ -139,13 +139,13 @@ def evaluer_main_5(main5):
         pair_rank = paires[0]
     
         pair_cards = [c for c in cartes if c[0] == pair_rank]
-        pair_cards = sorted(pair_cards, key=lambda c: ordre_suit[c[1]], reverse=True)
+        pair_cards = sorted(pair_cards, key=lambda c: suit_order[c[1]], reverse=True)
 
         kickers = [c for c in cartes if c[0] != pair_rank]
-        kickers = trier_cartes_desc(kickers)
+        kickers = sort_cards_desc(kickers)
         
         chosen5 = pair_cards + kickers
-        score = [1, rang_vers_valeur[pair_rank]] + [rang_vers_valeur[c[0]] for c in kickers]  # 1 = ONE_PAIR
+        score = [1, rank_value[pair_rank]] + [rank_value[c[0]] for c in kickers]  # 1 = ONE_PAIR
 
         return {
             "categorie": "ONE_PAIR",
@@ -154,8 +154,8 @@ def evaluer_main_5(main5):
         }
 
 
-    chosen5 = trier_cartes_desc(cartes)
-    score = [0] + [rang_vers_valeur[c[0]] for c in chosen5]
+    chosen5 = sort_cards_desc(cartes)
+    score = [0] + [rank_value[c[0]] for c in chosen5]
 
     return {
         "categorie": "HIGH_CARD",
@@ -169,13 +169,13 @@ def run_demo(scenario):
     if scenario == "validation":
         board = ["Ac", "Kd", "Qh", "Js", "9c"]
         holes = {"P1": ["Ac", "2d"], "P2": ["Th", "3c"]}
-        print("Doublons:", lister_doublons(board, holes))
+        print("Doublons:", list_duplicates(board, holes))
 
     elif scenario == "highcard":
         m1 = ["As", "Kd", "9h", "5c", "2d"]
         m2 = ["Ks", "Qd", "Jh", "8c", "3d"]
-        s1 = evaluer_main_5(m1)
-        s2 = evaluer_main_5(m2)
+        s1 = evaluate_hand_5(m1)
+        s2 = evaluate_hand_5(m2)
         print("m1:", s1)
         print("m2:", s2)
         print("m1 > m2 ?", s1["score"] > s2["score"])
@@ -197,6 +197,6 @@ if __name__ == "__main__":
     #     "P2": "Ah Ad"
     # }
 
-    # etat = construire_etat_partie(board_text, holes_text_par_joueur)
-    # sept_cartes = construire_7_cartes_par_joueur(etat)
-    # afficher_resume(etat, sept_cartes)
+    # etat = build_game_state(board_text, holes_text_par_joueur)
+    # sept_cartes = build_7cards_by_player(etat)
+    # print_summary(etat, sept_cartes)
