@@ -83,6 +83,23 @@ def generer_mains_5_parmi_7(cartes7):
 
     return resultats
 
+def lister_doublons(board, holes):
+    vus = {}
+    doublons = []
+
+    for c in board:
+        vus[c] = vus.get(c, 0) + 1
+        if vus[c] == 2:
+            doublons.append(c)
+
+    for joueur in holes:
+        for c in holes[joueur]:
+            vus[c] = vus.get(c, 0) + 1
+            if vus[c] == 2:
+                doublons.append(c)
+
+    return doublons
+
 
 if __name__ == "__main__":
     #run
