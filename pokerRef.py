@@ -122,8 +122,39 @@ def trier_cartes_desc(cartes):
 
 
 def evaluer_main_5(main5):
-    #hight card (0)
-    chosen5 = trier_cartes_desc(main5)
+    cartes = [normaliser_carte(c) for c in main5]
+    counts = {}
+      
+    for c in cartes:
+        r = c[0]
+        counts[r] = counts.get(r, 0) + 1
+
+    # détecter one pair
+    paires = []
+    for r, n in counts.items():
+        if n == 2:
+            paires.append(r)
+            
+    if len(paires) == 1:
+        pair_rank = paires[0]
+    
+        pair_cards = [c for c in cartes if c[0] == pair_rank]
+        pair_cards = sorted(pair_cards, key=lambda c: ordre_suit[c[1]], reverse=True)
+
+        kickers = [c for c in cartes if c[0] != pair_rank]
+        kickers = trier_cartes_desc(kickers)
+        
+        chosen5 = pair_cards + kickers
+        score = [1, rang_vers_valeur[pair_rank]] + [rang_vers_valeur[c[0]] for c in kickers]  # 1 = ONE_PAIR
+
+        return {
+            "categorie": "ONE_PAIR",
+            "score": score,
+            "chosen5": chosen5
+        }
+
+
+    chosen5 = trier_cartes_desc(cartes)
     score = [0] + [rang_vers_valeur[c[0]] for c in chosen5]
 
     return {
@@ -131,6 +162,8 @@ def evaluer_main_5(main5):
         "score": score,
         "chosen5": chosen5
     }
+
+
 
 def run_demo(scenario):
     if scenario == "validation":
