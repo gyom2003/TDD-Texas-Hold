@@ -68,6 +68,20 @@ def afficher_resume(etat, sept_cartes):
     print("=== 7 CARTES PAR JOUEUR ===")
     for joueur, cartes7 in sept_cartes.items():
         print(joueur, ":", cartes7)
+        
+def generer_mains_5_parmi_7(cartes7):
+    #loop pour générer les mains 5 cartes
+    resultats = []
+    n = len(cartes7)
+
+    for i in range(0, n - 4):
+        for j in range(i + 1, n - 3):
+            for k in range(j + 1, n - 2):
+                for l in range(k + 1, n - 1):
+                    for m in range(l + 1, n):
+                        resultats.append([cartes7[i], cartes7[j], cartes7[k], cartes7[l], cartes7[m]])
+
+    return resultats
 
 
 if __name__ == "__main__":
